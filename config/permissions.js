@@ -9,6 +9,9 @@ module.exports = {
     'rr': {
         allowedRoles: ['Moonwarden'],
     },
+    'honeypot': {
+        allowedRoles: ['Moonwarden'],
+    },
     
     // Role that can trigger the mention handler
     'mentionHandler': {
