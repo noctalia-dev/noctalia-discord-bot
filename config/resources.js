@@ -5,7 +5,7 @@ module.exports = {
         configuration: 'https://docs.noctalia.dev/docs/configuration/',
         theming: 'https://docs.noctalia.dev/docs/theming/',
         development: 'https://docs.noctalia.dev/docs/development/',
-        faq: 'https://docs.noctalia.dev/getting-started/faq/',
+        faq: 'https://docs.noctalia.dev/v5/getting-started/faq/',
     },
     
     discord: 'https://discord.noctalia.dev',
