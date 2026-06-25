@@ -1,11 +1,13 @@
 {
-  "1401598189823590460": {
-    "1458148079927689389": {
+  "1401598189823590460": [
+    {
+      "id": "mqttrpf1i1o2",
+      "channelId": "1401598385307516959",
       "owner": "noctalia-dev",
-      "repo": "noctalia-discord-bot",
+      "repo": "noctalia",
       "branch": "main",
       "createdBy": "158005126638993408",
-      "createdAt": "2026-06-25T16:23:00.378Z"
+      "createdAt": "2026-06-25T18:15:00.000Z"
     }
-  }
+  ]
 }

@@ -15,35 +15,54 @@ function setupGithubWebhookHandler(client) {
 
 function verifySignature(payload, signature) {
     if (!WEBHOOK_SECRET) return true;
+    if (!Buffer.isBuffer(payload) || !signature) return false;
 
-    const sig = crypto
+    const expected = `sha256=${crypto
         .createHmac('sha256', WEBHOOK_SECRET)
         .update(payload)
-        .digest('hex');
+        .digest('hex')}`;
 
-    return `sha256=${sig}` === signature;
+    const a = Buffer.from(expected);
+    const b = Buffer.from(signature);
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 function startWebhookServer() {
     const app = express();
 
-    app.use(express.json({
-        verify: (req, _res, buf) => {
-            req.rawBody = buf;
-        }
-    }));
+    // Capture the raw body for ANY content-type so we can verify the GitHub
+    // signature (computed over the exact bytes) and support both
+    // application/json and application/x-www-form-urlencoded deliveries.
+    app.use(express.raw({ type: '*/*', limit: '25mb' }));
 
     app.post('/github', async (req, res) => {
+      try {
+        const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+
         if (WEBHOOK_SECRET) {
             const signature = req.headers['x-hub-signature-256'];
-            if (!signature || !verifySignature(req.rawBody, signature)) {
+            if (!verifySignature(rawBody, signature)) {
                 console.warn('GitHub webhook: invalid signature');
                 return res.status(401).send('Unauthorized');
             }
         }
 
+        // GitHub sends either raw JSON or a urlencoded `payload=<json>` field.
+        const contentType = req.headers['content-type'] || '';
+        let payload;
+        try {
+            if (contentType.includes('application/x-www-form-urlencoded')) {
+                const form = new URLSearchParams(rawBody.toString('utf8'));
+                payload = JSON.parse(form.get('payload') || '{}');
+            } else {
+                payload = JSON.parse(rawBody.toString('utf8') || '{}');
+            }
+        } catch (err) {
+            console.warn('GitHub webhook: unparseable payload:', err.message);
+            return res.status(400).send('Bad payload');
+        }
+
         const event = req.headers['x-github-event'];
-        const payload = req.body;
 
         if (!payload || !payload.repository) {
             return res.send('OK');
@@ -56,6 +75,7 @@ function startWebhookServer() {
 
         const repoMatches = [];
         for (const [, guildWatches] of Object.entries(watches)) {
+            if (!Array.isArray(guildWatches)) continue;
             for (const watch of guildWatches) {
                 if (watch.owner === owner && watch.repo === repo) {
                     repoMatches.push(watch);
@@ -88,6 +108,10 @@ function startWebhookServer() {
         }
 
         res.send('OK');
+      } catch (err) {
+        console.error('GitHub webhook handler error:', err);
+        if (!res.headersSent) res.status(500).send('Internal error');
+      }
     });
 
     app.listen(WEBHOOK_PORT, () => {
