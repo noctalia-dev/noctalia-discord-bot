@@ -12,6 +12,9 @@ module.exports = {
     'honeypot': {
         allowedRoles: ['Moonwarden'],
     },
+    'github': {
+        allowedRoles: ['Moonwarden'],
+    },
     
     // Role that can trigger the mention handler
     'mentionHandler': {

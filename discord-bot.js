@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const { registerCommands, setupInteractionHandler } = require('./handlers/commandHandler');
 const { setupReactionRoleHandler } = require('./handlers/reactionRoleHandler');
 const { setupHoneypotHandler } = require('./handlers/honeypotHandler');
+const { setupGithubWebhookHandler } = require('./handlers/githubWebhookHandler');
 const { updateBotStatus } = require('./utils/status');
 
 const client = new Client({
@@ -31,6 +32,7 @@ if (!token) {
 setupInteractionHandler(client);
 setupReactionRoleHandler(client);
 setupHoneypotHandler(client);
+setupGithubWebhookHandler(client);
 
 client.once('clientReady', async () => {
     console.log(`Logged in as ${client.user.tag}!`);
