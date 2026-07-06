@@ -7,15 +7,13 @@ const resources = require('../config/resources');
  */
 async function updateBotStatus(client) {
     try {
-        const [release, commit, qsRelease, qsCommit] = await Promise.all([
+        const [release, commit] = await Promise.all([
             getLatestRelease(resources.githubApi.owner, resources.githubApi.repo),
             getLatestCommit(resources.githubApi.owner, resources.githubApi.repo),
-            getLatestRelease(resources.githubApiQs.owner, resources.githubApiQs.repo),
-            getLatestCommit(resources.githubApiQs.owner, resources.githubApiQs.repo),
         ]);
-        
+
         let statusText = '';
-        
+
         if (release && commit) {
             statusText = `${release.tag} • ${commit.sha}`;
         } else if (release) {
@@ -25,15 +23,7 @@ async function updateBotStatus(client) {
         } else {
             statusText = 'Noctalia Shell';
         }
-        
-        if (qsRelease && qsCommit) {
-            statusText += ` | QS ${qsRelease.tag} • ${qsCommit.sha}`;
-        } else if (qsRelease) {
-            statusText += ` | QS ${release.tag}`;
-        } else if (qsCommit) {
-            statusText += ` | QS Commit ${qsCommit.sha}`;
-        }
-        
+
         client.user.setActivity(statusText, {
             type: ActivityType.Watching,
         });

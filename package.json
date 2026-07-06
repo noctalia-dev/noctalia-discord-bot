@@ -1,7 +1,7 @@
 {
   "name": "talia",
   "version": "1.0.0",
-  "description": "noctalia-shell discord bot",
+  "description": "noctalia discord bot",
   "main": "discord-bot.js",
   "scripts": {
     "start": "node discord-bot.js",

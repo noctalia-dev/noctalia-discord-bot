@@ -9,14 +9,10 @@ module.exports = {
     },
     
     discord: 'https://discord.noctalia.dev',
-    github: 'https://github.com/noctalia-dev/noctalia-shell',
+    github: 'https://github.com/noctalia-dev/noctalia',
     githubApi: {
         owner: 'noctalia-dev',
-        repo: 'noctalia-shell',
-    },
-    githubApiQs: {
-        owner: 'noctalia-dev',
-        repo: 'noctalia-qs',
+        repo: 'noctalia',
     },
     website: 'https://noctalia.dev',
     
