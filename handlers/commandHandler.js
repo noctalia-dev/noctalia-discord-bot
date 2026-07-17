@@ -95,6 +95,19 @@ function setupInteractionHandler(client) {
     const commandModules = loadCommandModules();
     
     client.on('interactionCreate', async interaction => {
+        if (interaction.isAutocomplete()) {
+            const command = commandModules.get(interaction.commandName);
+
+            if (!command || typeof command.autocomplete !== 'function') return;
+
+            try {
+                await command.autocomplete(interaction);
+            } catch (error) {
+                console.error(`Error handling autocomplete for ${interaction.commandName}:`, error);
+            }
+            return;
+        }
+
         if (!interaction.isChatInputCommand()) return;
 
         const command = commandModules.get(interaction.commandName);

@@ -1,7 +1,10 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { createEmbed } = require('../utils/embeds');
 const { getFAQs, fetchFAQs } = require('../utils/docs');
+const { getOgImageUrl } = require('../utils/docsPages');
 const resources = require('../config/resources');
+
+const FAQ_OG_IMAGE = getOgImageUrl('getting-started/faq');
 
 let commandChoices = [];
 let choicesInitialized = false;
@@ -170,6 +173,7 @@ module.exports = {
             const embed = createEmbed.info({
                 title: '❓ Frequently Asked Questions',
                 description: `Browse all available FAQ topics. Select a topic from the dropdown to view the answer.\n\n**[View Full FAQ on Docs](${resources.docs.faq})**`,
+                image: FAQ_OG_IMAGE,
                 fields: fields,
                 footer: `Can't find what you're looking for? Check the full documentation or ask in #issues!`,
             });
@@ -198,6 +202,7 @@ module.exports = {
         const embed = createEmbed.info({
             title: `❓ ${faq.question}`,
             description: `${cleanedAnswer}\n\n**[View Category on Docs](${categoryUrl})**`,
+            image: FAQ_OG_IMAGE,
             footer: `Category: ${formatCategoryName(faq.category || 'general')} • Use /faq to see all FAQs`,
         });
 
