@@ -19,5 +19,10 @@ module.exports = {
     channels: {
         issues: '1419664736957628559',
     },
+
+    rules: {
+        messageId: '1506712338122670203',
+        channelId: '1424715257980653668',
+    },
 };
 

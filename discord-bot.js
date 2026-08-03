@@ -5,6 +5,7 @@ const { setupReactionRoleHandler } = require('./handlers/reactionRoleHandler');
 const { setupHoneypotHandler } = require('./handlers/honeypotHandler');
 const { setupGithubWebhookHandler } = require('./handlers/githubWebhookHandler');
 const { updateBotStatus } = require('./utils/status');
+const { syncRulesMessage, setupRulesFileWatcher } = require('./utils/rulesSync');
 
 const client = new Client({
     intents: [
@@ -50,6 +51,9 @@ client.once('clientReady', async () => {
     await registerCommands(client.user.id, guildId, token);
     await updateBotStatus(client);
     setInterval(() => updateBotStatus(client), 15 * 60 * 1000);
+
+    await syncRulesMessage(client);
+    setupRulesFileWatcher(client);
 });
 
 client.login(token).catch((error) => {
