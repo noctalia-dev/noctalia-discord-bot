@@ -2,12 +2,10 @@
 
 To access the server, you need to pass a quick vibe check. Please read the rules below and react with ✅ to confirm you have basic reading comprehension.
 
----
-
 ## 📜 The Law of the Land
 
 ### 1. Don't @ Staff & Respect Dev Boundaries 🚫
-Our developers and moderators are here to build and manage the project—not to act as 1:1 help desks.
+Our developers and moderators are here to build and manage the project, not to act as 1:1 help desks.
 * **Do not ping (@) developers or staff** unless specifically told to do so.
 * **Do not DM staff** for support or special attention. DMs will be ignored, and repeated DMing will get you kicked.
 * **No backchanneling.** Asking questions in public channels helps everyone; demand-pings do not.
@@ -32,13 +30,9 @@ No spamming text channels, no massive strings of random, nonsensical messages, a
 ### 7. The Golden Rule 😇
 Be a decent human being. If you wouldn't say it to someone's face, don't type it here.
 
----
-
 Thanks for protecting the vibe! <3
 
 > ⚡ **Fair Warning:** Failing to follow these rules will get you timed out or banned. We have a shiny hammer and we aren't afraid to use it. 🔨
-
----
 
 ## 🛠️ Actually Broken?
 
