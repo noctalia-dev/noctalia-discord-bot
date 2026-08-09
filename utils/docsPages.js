@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DOCS_SOURCE_DIR = process.env.DOCS_SOURCE_DIR
-    || path.join(__dirname, '..', '..', 'noctalia-docs', 'src', 'content', 'docs', 'v5');
+    || path.join(__dirname, '..', '..', 'noctalia-docs', 'src', 'content', 'docs', 'noctalia');
 
 function getSiteBaseUrl() {
     const base = process.env.DOCS_SITE_URL || 'https://docs.noctalia.dev';
@@ -21,7 +21,7 @@ function humanize(segment) {
 }
 
 function getOgImageUrl(rawSlug) {
-    const ogPath = rawSlug ? `/og/docs/v5/${rawSlug}.webp` : '/og/docs/v5.webp';
+    const ogPath = rawSlug ? `/og/docs/noctalia/${rawSlug}.webp` : '/og/docs/noctalia.webp';
     return `${getSiteBaseUrl()}${ogPath}`;
 }
 
@@ -67,8 +67,8 @@ function buildPageFromFile(filePath) {
     const displayName = breadcrumb ? `${breadcrumb} > ${title}` : title;
 
     const url = slug
-        ? `${getSiteBaseUrl()}/v5/${slug}/`
-        : `${getSiteBaseUrl()}/v5/`;
+        ? `${getSiteBaseUrl()}/noctalia/${slug}/`
+        : `${getSiteBaseUrl()}/noctalia/`;
 
     return {
         title,

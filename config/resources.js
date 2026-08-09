@@ -1,11 +1,11 @@
 module.exports = {
     docs: {
-        main: 'https://docs.noctalia.dev/docs/',
-        gettingStarted: 'https://docs.noctalia.dev/docs/getting-started/',
-        configuration: 'https://docs.noctalia.dev/docs/configuration/',
-        theming: 'https://docs.noctalia.dev/docs/theming/',
-        development: 'https://docs.noctalia.dev/docs/development/',
-        faq: 'https://docs.noctalia.dev/v5/getting-started/faq/',
+        main: 'https://docs.noctalia.dev/noctalia/',
+        gettingStarted: 'https://docs.noctalia.dev/noctalia/getting-started/',
+        configuration: 'https://docs.noctalia.dev/noctalia/configuration/',
+        theming: 'https://docs.noctalia.dev/noctalia/theming/',
+        development: 'https://docs.noctalia.dev/noctalia-shell/development/',
+        faq: 'https://docs.noctalia.dev/noctalia/getting-started/faq/',
     },
     
     discord: 'https://discord.noctalia.dev',
