@@ -15,6 +15,9 @@ module.exports = {
     'github': {
         allowedRoles: ['Moonwarden'],
     },
+    'logging': {
+        allowedRoles: ['Moonwarden'],
+    },
     
     // Role that can trigger the mention handler
     'mentionHandler': {
@@ -26,4 +29,3 @@ module.exports = {
         allowedRoles: ['Moonwarden'],
     },
 };
-

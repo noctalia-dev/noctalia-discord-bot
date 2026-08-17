@@ -4,6 +4,7 @@ const { registerCommands, setupInteractionHandler } = require('./handlers/comman
 const { setupReactionRoleHandler } = require('./handlers/reactionRoleHandler');
 const { setupHoneypotHandler } = require('./handlers/honeypotHandler');
 const { setupGithubWebhookHandler } = require('./handlers/githubWebhookHandler');
+const { setupLoggingHandler } = require('./handlers/loggingHandler');
 const { updateBotStatus } = require('./utils/status');
 const { syncRulesMessage, setupRulesFileWatcher } = require('./utils/rulesSync');
 
@@ -14,6 +15,7 @@ const client = new Client({
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildModeration,
     ],
     partials: [
         Partials.Message,
@@ -34,6 +36,7 @@ setupInteractionHandler(client);
 setupReactionRoleHandler(client);
 setupHoneypotHandler(client);
 setupGithubWebhookHandler(client);
+setupLoggingHandler(client);
 
 client.once('clientReady', async () => {
     console.log(`Logged in as ${client.user.tag}!`);
@@ -60,4 +63,3 @@ client.login(token).catch((error) => {
     console.error('Error logging in:', error);
     process.exit(1);
 });
-
