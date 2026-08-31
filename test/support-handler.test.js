@@ -1,0 +1,99 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { ChannelType, PermissionFlagsBits } = require('discord.js');
+const { setupSupportHandler } = require('../handlers/supportHandler');
+const { buildTicketTopic } = require('../utils/support');
+
+class FakeCollection extends Map {
+    find(predicate) {
+        return [...this.values()].find(predicate);
+    }
+}
+
+function createInteraction(overrides = {}) {
+    const interaction = {
+        customId: 'support:start:noctalia',
+        user: { id: '123456789012345678', username: 'Test User', tag: 'Test User#0001' },
+        guild: null,
+        client: { user: { id: '999999999999999999' } },
+        channel: null,
+        isButton: () => true,
+        inGuild: () => true,
+        deferReply: async () => {},
+        editReply: async payload => { interaction.editedReply = payload; },
+        reply: async payload => { interaction.replyPayload = payload; },
+        followUp: async payload => { interaction.followUpPayload = payload; },
+        ...overrides,
+    };
+    return interaction;
+}
+
+function createClient() {
+    const client = {
+        user: { id: '999999999999999999' },
+        on(event, listener) {
+            assert.equal(event, 'interactionCreate');
+            this.interactionHandler = listener;
+        },
+    };
+    setupSupportHandler(client);
+    return client;
+}
+
+test('support button creates a private channel with owner and staff access', async () => {
+    const staffRole = { id: 'staff-role', name: 'Moonwarden', toString: () => '<@&staff-role>' };
+    const created = [];
+    const ticketChannel = {
+        id: 'ticket-channel',
+        send: async payload => { ticketChannel.welcome = payload; },
+        delete: async () => {},
+        toString: () => '<#ticket-channel>',
+    };
+    const guild = {
+        id: 'guild-id',
+        roles: {
+            everyone: { id: 'everyone-role' },
+            cache: new FakeCollection([['staff-role', staffRole]]),
+        },
+        members: { me: { id: '999999999999999999' } },
+        channels: {
+            cache: new FakeCollection(),
+            create: async options => { created.push(options); return ticketChannel; },
+        },
+    };
+    const interaction = createInteraction({ guild });
+    const client = createClient();
+
+    await client.interactionHandler(interaction);
+
+    assert.equal(created.length, 1);
+    assert.equal(created[0].type, ChannelType.GuildText);
+    assert.equal(created[0].topic, buildTicketTopic(interaction.user.id, 'noctalia'));
+    assert.deepEqual(created[0].permissionOverwrites[0].deny, [PermissionFlagsBits.ViewChannel]);
+    assert.equal(created[0].permissionOverwrites.some(overwrite => overwrite.id === staffRole.id), true);
+    assert.match(interaction.editedReply.content, /private Noctalia support session is ready/);
+    assert.equal(ticketChannel.welcome.allowedMentions.roles[0], staffRole.id);
+});
+
+test('ticket owner can close and delete the support channel', async () => {
+    let deleted = false;
+    const ticketChannel = {
+        topic: buildTicketTopic('123456789012345678', 'other'),
+        delete: async () => { deleted = true; },
+    };
+    const interaction = createInteraction({
+        customId: 'support:close',
+        channel: ticketChannel,
+        guild: { id: 'guild-id', members: {}, roles: {} },
+        member: {
+            permissions: { has: () => false },
+            roles: { cache: new FakeCollection() },
+        },
+    });
+    const client = createClient();
+
+    await client.interactionHandler(interaction);
+
+    assert.match(interaction.replyPayload.content, /Closing this support session/);
+    assert.equal(deleted, true);
+});

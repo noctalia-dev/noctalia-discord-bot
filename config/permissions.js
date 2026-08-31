@@ -18,6 +18,10 @@ module.exports = {
     'logging': {
         allowedRoles: ['Moonwarden'],
     },
+    'support': {
+        allowedRoles: ['Moonwarden', 'Nightwatch', 'Owlkeeper'],
+    },
+    
     
     // Role that can trigger the mention handler
     'mentionHandler': {

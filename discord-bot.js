@@ -5,6 +5,7 @@ const { setupReactionRoleHandler } = require('./handlers/reactionRoleHandler');
 const { setupHoneypotHandler } = require('./handlers/honeypotHandler');
 const { setupGithubWebhookHandler } = require('./handlers/githubWebhookHandler');
 const { setupLoggingHandler } = require('./handlers/loggingHandler');
+const { setupSupportHandler } = require('./handlers/supportHandler');
 const { updateBotStatus } = require('./utils/status');
 const { syncRulesMessage, setupRulesFileWatcher } = require('./utils/rulesSync');
 
@@ -36,6 +37,7 @@ setupInteractionHandler(client);
 setupReactionRoleHandler(client);
 setupHoneypotHandler(client);
 setupGithubWebhookHandler(client);
+setupSupportHandler(client);
 setupLoggingHandler(client);
 
 client.once('clientReady', async () => {
