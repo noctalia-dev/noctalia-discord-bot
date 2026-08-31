@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { ChannelType, PermissionFlagsBits } = require('discord.js');
+const { ChannelType, MessageFlags, PermissionFlagsBits } = require('discord.js');
 const { setupSupportHandler } = require('../handlers/supportHandler');
 const { buildTicketTopic } = require('../utils/support');
 
@@ -13,7 +13,12 @@ class FakeCollection extends Map {
 function createInteraction(overrides = {}) {
     const interaction = {
         customId: 'support:start:noctalia',
-        user: { id: '123456789012345678', username: 'Test User', tag: 'Test User#0001' },
+        user: {
+            id: '123456789012345678',
+            username: 'Test User',
+            tag: 'Test User#0001',
+            toString: () => '<@123456789012345678>',
+        },
         guild: null,
         client: { user: { id: '999999999999999999' } },
         channel: null,
@@ -43,9 +48,10 @@ function createClient() {
 test('support button creates a private channel with owner and staff access', async () => {
     const staffRole = { id: 'staff-role', name: 'Moonwarden', toString: () => '<@&staff-role>' };
     const created = [];
+    const sentMessages = [];
     const ticketChannel = {
         id: 'ticket-channel',
-        send: async payload => { ticketChannel.welcome = payload; },
+        send: async payload => { sentMessages.push(payload); },
         delete: async () => {},
         toString: () => '<#ticket-channel>',
     };
@@ -80,7 +86,13 @@ test('support button creates a private channel with owner and staff access', asy
     assert.deepEqual(created[0].permissionOverwrites[0].deny, [PermissionFlagsBits.ViewChannel]);
     assert.equal(created[0].permissionOverwrites.some(overwrite => overwrite.id === staffRole.id), true);
     assert.match(confirmationInteraction.editedReply.content, /private Noctalia support session is ready/);
-    assert.equal(ticketChannel.welcome.allowedMentions.roles[0], staffRole.id);
+    assert.equal(sentMessages.length, 2);
+    assert.equal(sentMessages[0].content, 'Support team: <@&staff-role>');
+    assert.equal(sentMessages[0].flags, MessageFlags.SuppressNotifications);
+    assert.deepEqual(sentMessages[0].allowedMentions.roles, [staffRole.id]);
+    assert.equal(sentMessages[1].content, '<@123456789012345678>');
+    assert.equal(sentMessages[1].flags, undefined);
+    assert.deepEqual(sentMessages[1].allowedMentions.users, [confirmationInteraction.user.id]);
 });
 
 test('ticket owner can close and delete the support channel', async () => {

@@ -155,7 +155,15 @@ async function handleTicketStart(interaction, projectKey) {
 
         try {
             await ticketChannel.send({
-                content: `${interaction.user} ${staffRoles.map(role => role.toString()).join(' ')}`,
+                content: `Support team: ${staffRoles.map(role => role.toString()).join(' ')}`,
+                flags: MessageFlags.SuppressNotifications,
+                allowedMentions: {
+                    roles: staffRoles.map(role => role.id),
+                },
+            });
+
+            await ticketChannel.send({
+                content: `${interaction.user}`,
                 embeds: [createEmbed.info({
                     title: `${project.emoji} ${project.label} support session`,
                     description: [
@@ -169,7 +177,6 @@ async function handleTicketStart(interaction, projectKey) {
                 components: buildCloseButtonComponents(),
                 allowedMentions: {
                     users: [interaction.user.id],
-                    roles: staffRoles.map(role => role.id),
                 },
             });
         } catch (error) {
