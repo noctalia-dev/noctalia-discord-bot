@@ -8,11 +8,14 @@ const resources = require('../config/resources');
 const supportConfig = require('../config/support');
 const {
     buildCloseButtonComponents,
+    buildSupportConfirmationComponents,
     buildTicketName,
     buildTicketTopic,
     getSupportProject,
     parseSupportButtonId,
+    parseSupportConfirmationButtonId,
     parseTicketTopic,
+    SUPPORT_CANCEL_BUTTON_ID,
     SUPPORT_CLOSE_BUTTON_ID,
 } = require('../utils/support');
 
@@ -24,7 +27,22 @@ function setupSupportHandler(client) {
 
         const projectKey = parseSupportButtonId(interaction.customId);
         if (projectKey) {
-            await handleTicketStart(interaction, projectKey);
+            await handleTicketPrompt(interaction, projectKey);
+            return;
+        }
+
+        const confirmedProjectKey = parseSupportConfirmationButtonId(interaction.customId);
+        if (confirmedProjectKey) {
+            await handleTicketStart(interaction, confirmedProjectKey);
+            return;
+        }
+
+        if (interaction.customId === SUPPORT_CANCEL_BUTTON_ID) {
+            await interaction.update({
+                content: 'No support session was opened.',
+                embeds: [],
+                components: [],
+            });
             return;
         }
 
@@ -35,6 +53,22 @@ function setupSupportHandler(client) {
 
     console.log('Support ticket handler initialized');
 }
+
+async function handleTicketPrompt(interaction, projectKey) {
+    if (!interaction.inGuild()) return;
+
+    const project = getSupportProject(projectKey);
+    await interaction.reply({
+        embeds: [createEmbed.info({
+            title: `Open ${project.emoji} ${project.label} support session?`,
+            description: 'This will create a temporary private channel visible to you and the support team.',
+            footer: 'Choose Open support session to continue, or Cancel if you clicked by mistake.',
+        })],
+        components: buildSupportConfirmationComponents(projectKey),
+        flags: MessageFlags.Ephemeral,
+    });
+}
+
 
 async function handleTicketStart(interaction, projectKey) {
     if (!interaction.inGuild()) return;

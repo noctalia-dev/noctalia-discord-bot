@@ -61,17 +61,25 @@ test('support button creates a private channel with owner and staff access', asy
             create: async options => { created.push(options); return ticketChannel; },
         },
     };
-    const interaction = createInteraction({ guild });
+    const panelInteraction = createInteraction({ guild });
     const client = createClient();
 
-    await client.interactionHandler(interaction);
+    await client.interactionHandler(panelInteraction);
+    assert.match(panelInteraction.replyPayload.embeds[0].data.title, /Open .*Noctalia support session/);
+    assert.equal(created.length, 0);
+
+    const confirmationInteraction = createInteraction({
+        customId: 'support:confirm:noctalia',
+        guild,
+    });
+    await client.interactionHandler(confirmationInteraction);
 
     assert.equal(created.length, 1);
     assert.equal(created[0].type, ChannelType.GuildText);
-    assert.equal(created[0].topic, buildTicketTopic(interaction.user.id, 'noctalia'));
+    assert.equal(created[0].topic, buildTicketTopic(confirmationInteraction.user.id, 'noctalia'));
     assert.deepEqual(created[0].permissionOverwrites[0].deny, [PermissionFlagsBits.ViewChannel]);
     assert.equal(created[0].permissionOverwrites.some(overwrite => overwrite.id === staffRole.id), true);
-    assert.match(interaction.editedReply.content, /private Noctalia support session is ready/);
+    assert.match(confirmationInteraction.editedReply.content, /private Noctalia support session is ready/);
     assert.equal(ticketChannel.welcome.allowedMentions.roles[0], staffRole.id);
 });
 

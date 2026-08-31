@@ -46,6 +46,7 @@ module.exports = {
             title: 'Need help?',
             description: [
                 'For bugs and feature requests, please use GitHub so the work can be tracked.',
+                'These buttons open support sessions; they are not reactions, votes, or project-support buttons.',
                 'For quick questions or temporary troubleshooting, use one of the buttons in this message to start a private support session.',
                 '',
                 `Persistent issues belong on [GitHub](${resources.github}).`,

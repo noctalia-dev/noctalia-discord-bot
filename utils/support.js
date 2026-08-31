@@ -5,6 +5,8 @@ const {
 } = require('discord.js');
 
 const SUPPORT_BUTTON_PREFIX = 'support:start:';
+const SUPPORT_CONFIRM_BUTTON_PREFIX = 'support:confirm:';
+const SUPPORT_CANCEL_BUTTON_ID = 'support:cancel';
 const SUPPORT_CLOSE_BUTTON_ID = 'support:close';
 const SUPPORT_TICKET_TOPIC_PREFIX = 'talia-support-ticket:v1';
 
@@ -59,12 +61,49 @@ function buildSupportPanelComponents() {
         row.addComponents(
             new ButtonBuilder()
                 .setCustomId(getSupportButtonId(project.key))
-                .setLabel(`${project.emoji} ${project.label}`)
+                .setLabel(`${project.emoji} Get ${project.label} help`)
                 .setStyle(ButtonStyle.Secondary),
         );
     }
 
     return [row];
+}
+
+function getSupportConfirmationButtonId(projectKey) {
+    if (!getSupportProject(projectKey)) {
+        throw new Error(`Unknown support project: ${projectKey}`);
+    }
+
+    return `${SUPPORT_CONFIRM_BUTTON_PREFIX}${projectKey}`;
+}
+
+function parseSupportConfirmationButtonId(customId) {
+    if (typeof customId !== 'string' || !customId.startsWith(SUPPORT_CONFIRM_BUTTON_PREFIX)) {
+        return null;
+    }
+
+    const projectKey = customId.slice(SUPPORT_CONFIRM_BUTTON_PREFIX.length);
+    return getSupportProject(projectKey) ? projectKey : null;
+}
+
+function buildSupportConfirmationComponents(projectKey) {
+    const project = getSupportProject(projectKey);
+    if (!project) {
+        throw new Error(`Unknown support project: ${projectKey}`);
+    }
+
+    return [
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(getSupportConfirmationButtonId(projectKey))
+                .setLabel(`Open ${project.label} support session`)
+                .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+                .setCustomId(SUPPORT_CANCEL_BUTTON_ID)
+                .setLabel('Cancel')
+                .setStyle(ButtonStyle.Secondary),
+        ),
+    ];
 }
 
 function buildCloseButtonComponents() {
@@ -119,13 +158,18 @@ function buildTicketName(projectKey, username) {
 
 module.exports = {
     SUPPORT_BUTTON_PREFIX,
+    SUPPORT_CANCEL_BUTTON_ID,
     SUPPORT_CLOSE_BUTTON_ID,
+    SUPPORT_CONFIRM_BUTTON_PREFIX,
     SUPPORT_PROJECTS,
     buildCloseButtonComponents,
+    buildSupportConfirmationComponents,
     buildSupportPanelComponents,
     buildTicketName,
     buildTicketTopic,
+    getSupportConfirmationButtonId,
     getSupportProject,
     parseSupportButtonId,
+    parseSupportConfirmationButtonId,
     parseTicketTopic,
 };

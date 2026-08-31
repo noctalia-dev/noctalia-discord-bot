@@ -2,13 +2,16 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+    SUPPORT_CANCEL_BUTTON_ID,
     SUPPORT_CLOSE_BUTTON_ID,
     SUPPORT_PROJECTS,
     buildCloseButtonComponents,
+    buildSupportConfirmationComponents,
     buildSupportPanelComponents,
     buildTicketName,
     buildTicketTopic,
     parseSupportButtonId,
+    parseSupportConfirmationButtonId,
     parseTicketTopic,
 } = require('../utils/support');
 
@@ -21,6 +24,10 @@ test('support panel exposes one button for every supported project', () => {
         buttons.map(button => button.custom_id),
         Object.keys(SUPPORT_PROJECTS).map(project => `support:start:${project}`),
     );
+    assert.deepEqual(
+        buttons.map(button => button.label),
+        ['🌙 Get Noctalia help', '🌘 Get Umbriel help', '🙌 Get Greeter help', '📦 Get Other help'],
+    );
     assert.equal(buttons.length, 4);
 });
 
@@ -28,6 +35,17 @@ test('support button IDs reject unrelated and unknown buttons', () => {
     assert.equal(parseSupportButtonId('support:start:noctalia'), 'noctalia');
     assert.equal(parseSupportButtonId('support:start:unknown'), null);
     assert.equal(parseSupportButtonId('other:button'), null);
+});
+
+test('project selection requires explicit confirmation', () => {
+    assert.equal(parseSupportConfirmationButtonId('support:confirm:noctalia'), 'noctalia');
+    assert.equal(parseSupportConfirmationButtonId('support:confirm:unknown'), null);
+
+    const [row] = buildSupportConfirmationComponents('noctalia');
+    const buttons = row.toJSON().components;
+    assert.equal(buttons[0].custom_id, 'support:confirm:noctalia');
+    assert.equal(buttons[0].label, 'Open Noctalia support session');
+    assert.equal(buttons[1].custom_id, SUPPORT_CANCEL_BUTTON_ID);
 });
 
 test('ticket metadata round-trips and rejects malformed topics', () => {
