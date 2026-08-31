@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { ChannelType, MessageFlags, PermissionFlagsBits } = require('discord.js');
+const { ChannelType, PermissionFlagsBits } = require('discord.js');
 const { setupSupportHandler } = require('../handlers/supportHandler');
 const { buildTicketTopic } = require('../utils/support');
 
@@ -86,13 +86,11 @@ test('support button creates a private channel with owner and staff access', asy
     assert.deepEqual(created[0].permissionOverwrites[0].deny, [PermissionFlagsBits.ViewChannel]);
     assert.equal(created[0].permissionOverwrites.some(overwrite => overwrite.id === staffRole.id), true);
     assert.match(confirmationInteraction.editedReply.content, /private Noctalia support session is ready/);
-    assert.equal(sentMessages.length, 2);
-    assert.equal(sentMessages[0].content, 'Support team: <@&staff-role>');
-    assert.equal(sentMessages[0].flags, MessageFlags.SuppressNotifications);
-    assert.deepEqual(sentMessages[0].allowedMentions.roles, [staffRole.id]);
-    assert.equal(sentMessages[1].content, '<@123456789012345678>');
-    assert.equal(sentMessages[1].flags, undefined);
-    assert.deepEqual(sentMessages[1].allowedMentions.users, [confirmationInteraction.user.id]);
+    assert.equal(sentMessages.length, 1);
+    assert.equal(sentMessages[0].content, '<@123456789012345678>');
+    assert.equal(sentMessages[0].flags, undefined);
+    assert.deepEqual(sentMessages[0].allowedMentions.users, [confirmationInteraction.user.id]);
+    assert.equal(sentMessages[0].allowedMentions.roles, undefined);
 });
 
 test('ticket owner can close and delete the support channel', async () => {
