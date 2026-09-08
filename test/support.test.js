@@ -4,14 +4,18 @@ const assert = require('node:assert/strict');
 const {
     SUPPORT_CANCEL_BUTTON_ID,
     SUPPORT_CLOSE_BUTTON_ID,
+    SUPPORT_DETAILS_FIELD_IDS,
     SUPPORT_PROJECTS,
     buildCloseButtonComponents,
     buildSupportConfirmationComponents,
+    buildSupportDetailsModal,
     buildSupportPanelComponents,
     buildTicketName,
     buildTicketTopic,
+    getSupportDetailsFields,
     parseSupportButtonId,
     parseSupportConfirmationButtonId,
+    parseSupportDetailsModalId,
     parseTicketTopic,
 } = require('../utils/support');
 
@@ -46,6 +50,71 @@ test('project selection requires explicit confirmation', () => {
     assert.equal(buttons[0].custom_id, 'support:confirm:noctalia');
     assert.equal(buttons[0].label, 'Open Noctalia support session');
     assert.equal(buttons[1].custom_id, SUPPORT_CANCEL_BUTTON_ID);
+});
+
+test('support details modals collect project-specific system information', () => {
+    const noctaliaModal = buildSupportDetailsModal('noctalia').toJSON();
+    const noctaliaInputs = noctaliaModal.components.map(row => row.components[0]);
+
+    assert.equal(noctaliaModal.custom_id, 'support:details:noctalia');
+    assert.equal(parseSupportDetailsModalId(noctaliaModal.custom_id), 'noctalia');
+    assert.deepEqual(
+        noctaliaInputs.map(input => input.custom_id),
+        [
+            SUPPORT_DETAILS_FIELD_IDS.problem,
+            SUPPORT_DETAILS_FIELD_IDS.version,
+            SUPPORT_DETAILS_FIELD_IDS.distro,
+            SUPPORT_DETAILS_FIELD_IDS.graphics,
+        ],
+    );
+    assert.equal(noctaliaInputs.every(input => input.required), true);
+
+    const umbrielModal = buildSupportDetailsModal('umbriel').toJSON();
+    const umbrielInputs = umbrielModal.components.map(row => row.components[0]);
+    assert.equal(umbrielInputs[3].label, 'GPU');
+    assert.equal(getSupportDetailsFields('umbriel', {
+        problem: 'Umbriel is not responding.',
+        version: '0.5.0',
+        distro: 'Fedora 42',
+        graphics: 'AMD Radeon 780M',
+    })[3].name, 'GPU');
+
+    const otherModal = buildSupportDetailsModal('other').toJSON();
+    const otherInputs = otherModal.components.map(row => row.components[0]);
+    assert.deepEqual(
+        otherInputs.map(input => input.custom_id),
+        [
+            SUPPORT_DETAILS_FIELD_IDS.problem,
+            SUPPORT_DETAILS_FIELD_IDS.component,
+            SUPPORT_DETAILS_FIELD_IDS.system,
+        ],
+    );
+    assert.equal(otherInputs[2].required, false);
+    assert.equal(parseSupportDetailsModalId('support:details:unknown'), null);
+});
+
+test('support details fields omit optional Other system information', () => {
+    assert.deepEqual(getSupportDetailsFields('other', {
+        problem: 'I need help with a service.',
+        component: 'A custom integration',
+        system: '',
+    }), [
+        {
+            name: 'What do you need help with?',
+            value: 'I need help with a service.',
+            inline: false,
+        },
+        {
+            name: 'Application or component',
+            value: 'A custom integration',
+            inline: false,
+        },
+        {
+            name: 'System details',
+            value: 'Not provided',
+            inline: false,
+        },
+    ]);
 });
 
 test('ticket metadata round-trips and rejects malformed topics', () => {

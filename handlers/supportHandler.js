@@ -9,22 +9,33 @@ const supportConfig = require('../config/support');
 const {
     buildCloseButtonComponents,
     buildSupportConfirmationComponents,
+    buildSupportDetailsModal,
     buildTicketName,
     buildTicketTopic,
+    getSupportDetailsFields,
     getSupportProject,
     parseSupportButtonId,
     parseSupportConfirmationButtonId,
+    parseSupportDetailsModalId,
     parseTicketTopic,
     SUPPORT_CANCEL_BUTTON_ID,
     SUPPORT_CLOSE_BUTTON_ID,
+    SUPPORT_DETAILS_FIELD_IDS,
 } = require('../utils/support');
 
 const creatingTickets = new Set();
 
 function setupSupportHandler(client) {
     client.on('interactionCreate', async interaction => {
-        if (!interaction.isButton()) return;
+        if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
+        if (interaction.isModalSubmit()) {
+            const modalProjectKey = parseSupportDetailsModalId(interaction.customId);
+            if (modalProjectKey) {
+                await handleTicketStart(interaction, modalProjectKey, readSupportDetails(interaction, modalProjectKey));
+            }
+            return;
+        }
         const projectKey = parseSupportButtonId(interaction.customId);
         if (projectKey) {
             await handleTicketPrompt(interaction, projectKey);
@@ -33,7 +44,7 @@ function setupSupportHandler(client) {
 
         const confirmedProjectKey = parseSupportConfirmationButtonId(interaction.customId);
         if (confirmedProjectKey) {
-            await handleTicketStart(interaction, confirmedProjectKey);
+            await handleTicketDetailsPrompt(interaction, confirmedProjectKey);
             return;
         }
 
@@ -61,7 +72,11 @@ async function handleTicketPrompt(interaction, projectKey) {
     await interaction.reply({
         embeds: [createEmbed.info({
             title: `Open ${project.emoji} ${project.label} support session?`,
-            description: 'This will create a temporary private channel visible to you and the support team.',
+            description: [
+                'This will create a temporary private channel visible to you and the support team.',
+                '',
+                'Before it opens, you will be asked for a few setup details. This is not a public bug report.',
+            ].join('\n'),
             footer: 'Choose Open support session to continue, or Cancel if you clicked by mistake.',
         })],
         components: buildSupportConfirmationComponents(projectKey),
@@ -70,7 +85,14 @@ async function handleTicketPrompt(interaction, projectKey) {
 }
 
 
-async function handleTicketStart(interaction, projectKey) {
+async function handleTicketDetailsPrompt(interaction, projectKey) {
+    if (!interaction.inGuild()) return;
+
+    await interaction.showModal(buildSupportDetailsModal(projectKey));
+}
+
+
+async function handleTicketStart(interaction, projectKey, details) {
     if (!interaction.inGuild()) return;
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -156,16 +178,26 @@ async function handleTicketStart(interaction, projectKey) {
         try {
             await ticketChannel.send({
                 content: `${interaction.user}`,
-                embeds: [createEmbed.info({
-                    title: `${project.emoji} ${project.label} support session`,
-                    description: [
-                        `Welcome, ${interaction.user}. A support team member can help troubleshoot here.`,
-                        '',
-                        'This is a temporary conversation, not an issue tracker.',
-                        `If this turns out to be a bug or feature request, please continue on [GitHub](${resources.github}) before closing the session.`,
-                    ].join('\n'),
-                    footer: 'Use the button below when the session is finished.',
-                })],
+                embeds: [
+                    createEmbed.info({
+                        title: `${project.emoji} ${project.label} support session`,
+                        description: [
+                            `Welcome, ${interaction.user}. A support team member can help troubleshoot here.`,
+                            '',
+                            'Support is provided on a best-effort basis. Replies may take a few hours, depending on the time of day and volunteer availability.',
+                            '',
+                            'This is a temporary conversation, not an issue tracker.',
+                            `If this is a bug or feature request, please create a GitHub issue with the confirmed details: ${resources.github}`,
+                        ].join('\n'),
+                        footer: 'Use the button below when the session is finished.',
+                    }),
+                    createEmbed.info({
+                        title: 'Support details',
+                        description: 'Provided when this support session was opened.',
+                        fields: getSupportDetailsFields(projectKey, details),
+                        footer: 'Tell the support team if any of these details change.',
+                    }),
+                ],
                 components: buildCloseButtonComponents(),
                 // Staff access comes from channel permissions; do not ping the staff role.
                 allowedMentions: {
@@ -243,7 +275,25 @@ function resolveTicketCategory(guild) {
         throw new Error(`Configured support category ${supportConfig.categoryId} was not found.`);
     }
 
+
+
     return category;
+}
+function readSupportDetails(interaction, projectKey) {
+    const details = {
+        problem: interaction.fields.getTextInputValue(SUPPORT_DETAILS_FIELD_IDS.problem).trim(),
+    };
+
+    if (projectKey === 'other') {
+        details.component = interaction.fields.getTextInputValue(SUPPORT_DETAILS_FIELD_IDS.component).trim();
+        details.system = interaction.fields.getTextInputValue(SUPPORT_DETAILS_FIELD_IDS.system).trim();
+        return details;
+    }
+
+    details.version = interaction.fields.getTextInputValue(SUPPORT_DETAILS_FIELD_IDS.version).trim();
+    details.distro = interaction.fields.getTextInputValue(SUPPORT_DETAILS_FIELD_IDS.distro).trim();
+    details.graphics = interaction.fields.getTextInputValue(SUPPORT_DETAILS_FIELD_IDS.graphics).trim();
+    return details;
 }
 
 function resolveStaffRoles(guild) {

@@ -45,11 +45,11 @@ module.exports = {
         const panelEmbed = createEmbed.info({
             title: 'Need help?',
             description: [
-                'For bugs and feature requests, please use GitHub so the work can be tracked.',
-                'These buttons open support sessions; they are not reactions, votes, or project-support buttons.',
-                'For quick questions or temporary troubleshooting, use one of the buttons in this message to start a private support session.',
+                'For setup questions and temporary troubleshooting, use one of the buttons below to start a private support session.',
                 '',
-                `Persistent issues belong on [GitHub](${resources.github}).`,
+                '**Volunteer support:** Support is provided on a best-effort basis. Replies may take a few hours, depending on the time of day and volunteer availability.',
+                '',
+                `If you believe you found a bug or want a feature, please create a GitHub issue first: ${resources.github}`,
             ].join('\n'),
             footer: 'Support sessions are temporary and are not an issue queue.',
         });

@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { ChannelType, PermissionFlagsBits } = require('discord.js');
 const { setupSupportHandler } = require('../handlers/supportHandler');
-const { buildTicketTopic } = require('../utils/support');
+const { buildTicketTopic, SUPPORT_DETAILS_FIELD_IDS } = require('../utils/support');
 
 class FakeCollection extends Map {
     find(predicate) {
@@ -23,10 +23,12 @@ function createInteraction(overrides = {}) {
         client: { user: { id: '999999999999999999' } },
         channel: null,
         isButton: () => true,
+        isModalSubmit: () => false,
         inGuild: () => true,
         deferReply: async () => {},
         editReply: async payload => { interaction.editedReply = payload; },
         reply: async payload => { interaction.replyPayload = payload; },
+        showModal: async modal => { interaction.modal = modal; },
         followUp: async payload => { interaction.followUpPayload = payload; },
         ...overrides,
     };
@@ -80,16 +82,59 @@ test('support button creates a private channel with owner and staff access', asy
     });
     await client.interactionHandler(confirmationInteraction);
 
+    assert.equal(created.length, 0);
+    assert.equal(confirmationInteraction.modal.toJSON().custom_id, 'support:details:noctalia');
+
+    const supportDetails = {
+        [SUPPORT_DETAILS_FIELD_IDS.problem]: 'The panel does not start.',
+        [SUPPORT_DETAILS_FIELD_IDS.version]: '1.4.2',
+        [SUPPORT_DETAILS_FIELD_IDS.distro]: 'Fedora 42',
+        [SUPPORT_DETAILS_FIELD_IDS.graphics]: 'AMD RX 7800 XT; niri',
+    };
+    const detailsInteraction = createInteraction({
+        customId: 'support:details:noctalia',
+        guild,
+        isButton: () => false,
+        isModalSubmit: () => true,
+        fields: {
+            getTextInputValue: fieldId => supportDetails[fieldId],
+        },
+    });
+    await client.interactionHandler(detailsInteraction);
+
     assert.equal(created.length, 1);
     assert.equal(created[0].type, ChannelType.GuildText);
-    assert.equal(created[0].topic, buildTicketTopic(confirmationInteraction.user.id, 'noctalia'));
+    assert.equal(created[0].topic, buildTicketTopic(detailsInteraction.user.id, 'noctalia'));
     assert.deepEqual(created[0].permissionOverwrites[0].deny, [PermissionFlagsBits.ViewChannel]);
     assert.equal(created[0].permissionOverwrites.some(overwrite => overwrite.id === staffRole.id), true);
-    assert.match(confirmationInteraction.editedReply.content, /private Noctalia support session is ready/);
+    assert.match(detailsInteraction.editedReply.content, /private Noctalia support session is ready/);
     assert.equal(sentMessages.length, 1);
     assert.equal(sentMessages[0].content, '<@123456789012345678>');
+    assert.equal(sentMessages[0].embeds.length, 2);
+    assert.deepEqual(sentMessages[0].embeds[1].data.fields, [
+        {
+            name: 'What do you need help with?',
+            value: 'The panel does not start.',
+            inline: false,
+        },
+        {
+            name: 'Noctalia version',
+            value: '1.4.2',
+            inline: true,
+        },
+        {
+            name: 'Distribution',
+            value: 'Fedora 42',
+            inline: true,
+        },
+        {
+            name: 'GPU and Wayland compositor',
+            value: 'AMD RX 7800 XT; niri',
+            inline: false,
+        },
+    ]);
     assert.equal(sentMessages[0].flags, undefined);
-    assert.deepEqual(sentMessages[0].allowedMentions.users, [confirmationInteraction.user.id]);
+    assert.deepEqual(sentMessages[0].allowedMentions.users, [detailsInteraction.user.id]);
     assert.equal(sentMessages[0].allowedMentions.roles, undefined);
 });
 

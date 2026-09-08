@@ -22,7 +22,7 @@ function setupHoneypotHandler(client) {
         if (DRY_RUN) {
             console.log(
                 `[HONEYPOT] ${message.author.tag} (${message.author.id}) posted in #${message.channel.name} ` +
-                `(${message.channel.id}) — would ban and delete messages from the last 7 days`
+                `(${message.channel.id}): would ban and delete messages from the last 7 days`
             );
             console.log(`[HONEYPOT] Message: ${message.content || '(no text content)'}`);
             return;
@@ -37,7 +37,7 @@ function setupHoneypotHandler(client) {
             }
 
             if (!member.bannable) {
-                console.error(`[HONEYPOT] Cannot ban ${message.author.tag} — insufficient role hierarchy`);
+                console.error(`[HONEYPOT] Cannot ban ${message.author.tag}: insufficient role hierarchy`);
                 return;
             }
 

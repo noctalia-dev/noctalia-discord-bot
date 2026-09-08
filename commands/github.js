@@ -174,7 +174,7 @@ async function handleRemove(interaction) {
         return;
     }
 
-    const list = channelWatches.map(w => `\`${w.id}\` — **${w.owner}/${w.repo}** (\`${w.branch}\`)`).join('\n');
+    const list = channelWatches.map(w => `\`${w.id}\` - **${w.owner}/${w.repo}** (\`${w.branch}\`)`).join('\n');
     const errorEmbed = createEmbed.error({
         title: 'Multiple Watches',
         description: `${channel} has multiple watches. Use \`/github remove\` with \`repo\` to specify which one, or use the ID:\n\n${list}`,
