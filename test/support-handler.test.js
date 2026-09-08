@@ -138,6 +138,52 @@ test('support button creates a private channel with owner and staff access', asy
     assert.equal(sentMessages[0].allowedMentions.roles, undefined);
 });
 
+test('tickets direct bug reports to the selected project destination', async t => {
+    for (const [projectKey, issueUrl] of [
+        ['noctalia', 'https://github.com/noctalia-dev'],
+        ['umbriel', 'https://github.com/noctalia-dev/umbriel'],
+        ['greeter', 'https://github.com/noctalia-dev/noctalia-greeter'],
+        ['other', 'https://github.com/noctalia-dev'],
+    ]) {
+        await t.test(projectKey, async () => {
+            const sentMessages = [];
+            const ticketChannel = {
+                id: `${projectKey}-ticket`,
+                send: async payload => { sentMessages.push(payload); },
+                delete: async () => {},
+                toString: () => `<#${projectKey}-ticket>`,
+            };
+            const guild = {
+                id: `${projectKey}-guild`,
+                roles: {
+                    everyone: { id: 'everyone-role' },
+                    cache: new FakeCollection([['staff-role', { id: 'staff-role', name: 'Moonwarden' }]]),
+                },
+                members: { me: { id: '999999999999999999' } },
+                channels: {
+                    cache: new FakeCollection(),
+                    create: async () => ticketChannel,
+                },
+            };
+            const interaction = createInteraction({
+                customId: `support:details:${projectKey}`,
+                guild,
+                isButton: () => false,
+                isModalSubmit: () => true,
+                fields: {
+                    getTextInputValue: () => 'Test detail',
+                },
+            });
+
+            const client = createClient();
+            await client.interactionHandler(interaction);
+
+            assert.equal(sentMessages.length, 1);
+            assert.ok(sentMessages[0].embeds[0].data.description.includes(issueUrl));
+        });
+    }
+});
+
 test('ticket owner can close and delete the support channel', async () => {
     let deleted = false;
     const ticketChannel = {

@@ -32,11 +32,13 @@ const SUPPORT_PROJECTS = Object.freeze({
         key: 'umbriel',
         label: 'Umbriel',
         emoji: '🌘',
+        issueUrl: 'https://github.com/noctalia-dev/umbriel',
     }),
     greeter: Object.freeze({
         key: 'greeter',
         label: 'Greeter',
         emoji: '🙌',
+        issueUrl: 'https://github.com/noctalia-dev/noctalia-greeter',
     }),
     other: Object.freeze({
         key: 'other',

@@ -4,7 +4,6 @@ const {
     PermissionFlagsBits,
 } = require('discord.js');
 const { createEmbed } = require('../utils/embeds');
-const resources = require('../config/resources');
 const supportConfig = require('../config/support');
 const {
     buildCloseButtonComponents,
@@ -187,7 +186,7 @@ async function handleTicketStart(interaction, projectKey, details) {
                             'Support is provided on a best-effort basis. Replies may take a few hours, depending on the time of day and volunteer availability.',
                             '',
                             'This is a temporary conversation, not an issue tracker.',
-                            `If this is a bug or feature request, please create a GitHub issue with the confirmed details: ${resources.github}`,
+                            `If this is a bug or feature request, please create a GitHub issue with the confirmed details: ${project.issueUrl || 'https://github.com/noctalia-dev'}`,
                         ].join('\n'),
                         footer: 'Use the button below when the session is finished.',
                     }),
