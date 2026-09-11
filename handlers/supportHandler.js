@@ -185,7 +185,7 @@ async function handleTicketStart(interaction, projectKey, details) {
                             '',
                             'Support is provided on a best-effort basis. Replies may take a few hours, depending on the time of day and volunteer availability.',
                             '',
-                            'This is a temporary conversation, not an issue tracker.',
+                            'This is a temporary conversation, not an issue tracker. It may be closed 16 hours after the last message unless volunteer staff decide otherwise.',
                             `If this is a bug or feature request, please create a GitHub issue with the confirmed details: ${project.issueUrl || 'https://github.com/noctalia-dev'}`,
                         ].join('\n'),
                         footer: 'Use the button below when the session is finished.',

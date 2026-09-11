@@ -111,6 +111,10 @@ test('support button creates a private channel with owner and staff access', asy
     assert.equal(sentMessages.length, 1);
     assert.equal(sentMessages[0].content, '<@123456789012345678>');
     assert.equal(sentMessages[0].embeds.length, 2);
+    assert.match(
+        sentMessages[0].embeds[0].data.description,
+        /may be closed 16 hours after the last message unless volunteer staff decide otherwise/,
+    );
     assert.deepEqual(sentMessages[0].embeds[1].data.fields, [
         {
             name: 'What do you need help with?',
