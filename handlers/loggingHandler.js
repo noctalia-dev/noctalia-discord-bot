@@ -4,7 +4,6 @@ const { getLoggingChannelId } = require('../utils/logging');
 const AUDIT_LOG_DELAY_MS = 1500;
 const AUDIT_LOG_MAX_AGE_MS = 15000;
 const MESSAGE_CACHE_LIMIT = 10000;
-const recentlySeenMessages = new Map();
 
 function truncate(value, maxLength) {
     if (!value) return null;
@@ -63,18 +62,32 @@ function moderationDetails(user, auditEntry) {
         `**Reason:** ${auditEntry?.reason || 'No reason provided'}`;
 }
 
-function rememberMessage(message) {
-    if (!message.guild || !message.author || message.author.bot) return;
+function rememberMessage(recentlySeenMessages, data, isCreate) {
+    if (!data.guild_id || !data.id || !data.channel_id) return;
 
-    recentlySeenMessages.set(message.id, {
-        author: {
-            id: message.author.id,
-            tag: message.author.tag,
-            username: message.author.username,
-        },
-        channel: { id: message.channel.id },
-        content: message.content,
-    });
+    const cachedMessage = recentlySeenMessages.get(data.id);
+    if (!cachedMessage && !data.author && typeof data.content !== 'string') return;
+    const snapshot = {
+        ...cachedMessage,
+        channel: { id: data.channel_id },
+    };
+
+    if (data.author) {
+        snapshot.author = {
+            id: data.author.id,
+            tag: data.author.discriminator && data.author.discriminator !== '0'
+                ? `${data.author.username}#${data.author.discriminator}`
+                : data.author.username,
+            username: data.author.username,
+            bot: data.author.bot ?? cachedMessage?.author?.bot ?? false,
+        };
+    }
+
+    // An update can arrive before creation. Keep its newer text when creation follows.
+    if (typeof data.content === 'string' && (!isCreate || snapshot.content == null)) {
+        snapshot.content = data.content;
+    }
+    recentlySeenMessages.set(data.id, snapshot);
 
     if (recentlySeenMessages.size > MESSAGE_CACHE_LIMIT) {
         recentlySeenMessages.delete(recentlySeenMessages.keys().next().value);
@@ -82,26 +95,32 @@ function rememberMessage(message) {
 }
 
 function setupLoggingHandler(client) {
-    client.on('messageCreate', rememberMessage);
+    const recentlySeenMessages = new Map();
+
+    // Raw events arrive before Discord.js processes them. A pre-existing partial
+    // can cause the library to suppress messageCreate, so cache the payload directly.
+    client.on('raw', packet => {
+        if (packet.t !== 'MESSAGE_CREATE' && packet.t !== 'MESSAGE_UPDATE') return;
+        rememberMessage(recentlySeenMessages, packet.d, packet.t === 'MESSAGE_CREATE');
+    });
 
     client.on('messageDelete', async message => {
         if (!message.guild) return;
-        if (!await hasLoggingChannel(message.guild, 'activity')) return;
 
         const cachedMessage = recentlySeenMessages.get(message.id);
         recentlySeenMessages.delete(message.id);
-        const deletedMessage = message.partial
-            ? await message.fetch().catch(() => message)
-            : message;
-        if (deletedMessage.author?.bot || cachedMessage?.author?.bot) return;
+        if (message.author?.bot || cachedMessage?.author?.bot) return;
+        if (!await hasLoggingChannel(message.guild, 'activity')) return;
 
-        const author = deletedMessage.author || cachedMessage?.author;
-        const channel = deletedMessage.channel || cachedMessage?.channel;
-        const content = deletedMessage.content || cachedMessage?.content;
+        // Deleted messages cannot be fetched. Prefer the raw snapshot, which also
+        // retains edits that Discord.js may not have applied to its cached object.
+        const author = cachedMessage?.author || message.author;
+        const channel = message.channel || cachedMessage?.channel;
+        const content = cachedMessage?.content ?? message.content;
         // Message-delete audit entries target the message author, not the message.
         const auditEntry = author
             ? await findAuditEntry(
-                deletedMessage.guild,
+                message.guild,
                 AuditLogEvent.MessageDelete,
                 author.id,
                 entry => entry.extra?.channel?.id === channel?.id
@@ -113,7 +132,7 @@ function setupLoggingHandler(client) {
             : author
                 ? formatUser(author)
                 : 'Unknown';
-        await sendLog(deletedMessage.guild, 'activity', {
+        await sendLog(message.guild, 'activity', {
             title: '🗑️ Message Deleted',
             color: 0xED4245,
             description:
