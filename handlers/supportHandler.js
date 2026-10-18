@@ -228,7 +228,8 @@ async function handleTicketStart(interaction, projectKey, details) {
 async function handleTicketClose(interaction) {
     if (!interaction.inGuild()) return;
 
-    const ticket = parseTicketTopic(interaction.channel.topic);
+    const channel = interaction.channel;
+    const ticket = channel ? parseTicketTopic(channel.topic) : null;
     if (!ticket) {
         await interaction.reply({
             content: 'This button can only close a Talia support session.',
@@ -256,7 +257,7 @@ async function handleTicketClose(interaction) {
     });
 
     try {
-        await interaction.channel.delete(`Support session closed by ${interaction.user.tag}`);
+        await channel.delete(`Support session closed by ${interaction.user.tag}`);
     } catch (error) {
         console.error('[support] Failed to delete ticket:', error);
         await interaction.followUp({
