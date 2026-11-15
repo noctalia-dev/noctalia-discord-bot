@@ -232,7 +232,7 @@ async function handleTicketClose(interaction) {
     const ticket = channel ? parseTicketTopic(channel.topic) : null;
     if (!ticket) {
         await interaction.reply({
-            content: 'This button can only close a Talia support session.',
+            content: 'This can only be used inside a Talia support session.',
             flags: MessageFlags.Ephemeral,
         });
         return;
@@ -327,6 +327,7 @@ function findExistingTicket(guild, userId) {
 
 module.exports = {
     findExistingTicket,
+    handleTicketClose,
     memberHasSupportRole,
     resolveStaffRoles,
     setupSupportHandler,
