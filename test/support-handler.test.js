@@ -146,6 +146,7 @@ test('tickets direct bug reports to the selected project destination', async t =
     for (const [projectKey, issueUrl] of [
         ['noctalia', 'https://github.com/noctalia-dev'],
         ['umbriel', 'https://github.com/noctalia-dev/umbriel'],
+        ['luciole', 'https://github.com/noctalia-dev/luciole'],
         ['greeter', 'https://github.com/noctalia-dev/noctalia-greeter'],
         ['other', 'https://github.com/noctalia-dev'],
     ]) {

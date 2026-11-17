@@ -30,9 +30,9 @@ test('support panel exposes one button for every supported project', () => {
     );
     assert.deepEqual(
         buttons.map(button => button.label),
-        ['🌙 Get Noctalia help', '🌘 Get Umbriel help', '🙌 Get Greeter help', '📦 Get Other help'],
+        ['🌙 Get Noctalia help', '🌘 Get Umbriel help', '✨ Get Luciole help', '🙌 Get Greeter help', '📦 Get Other help'],
     );
-    assert.equal(buttons.length, 4);
+    assert.equal(buttons.length, 5);
 });
 
 test('support button IDs reject unrelated and unknown buttons', () => {
